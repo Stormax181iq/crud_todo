@@ -106,7 +106,7 @@ function printHelp(helpValue) {
   }
 
   console.log(`
-    For more information on a specific command, type "--help [command keyword]"
+    For more information on a specific command, type "--help [command]"
     `);
 }
 
@@ -115,6 +115,12 @@ async function printAddInstruction() {
   const id = await rl.question("Id (must be unique number) : ");
   rl.pause();
 
+  addItem(id, title);
+
+  rl.resume();
+}
+
+function addItem(id, title) {
   client
     .query(`INSERT INTO todos (id, title) VALUES (${id}, '${title}')`)
     .then(() => {
@@ -123,8 +129,22 @@ async function printAddInstruction() {
     .catch((err) => {
       console.error("Couldn't add the task :", err);
     });
+}
 
-  rl.resume();
+function readItems(filter) {
+  client
+    .query(`SELECT (id, title, done) FROM todos`)
+    .then((res) => showItems(res.rows))
+    .catch((err) => {
+      console.error("Couldn't read the tasks", err);
+    });
+}
+
+function showItems(rows) {
+  console.log(`
+    Found ${rows.length} items :
+    Id  |     Title     |   Status   |`);
+  rows.map((row) => console.log(row.row));
 }
 
 async function main() {
@@ -150,6 +170,10 @@ async function main() {
 
     if (add) {
       printAddInstruction();
+    }
+
+    if (list) {
+      readItems(list);
     }
 
     if (exit) {
