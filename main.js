@@ -132,8 +132,19 @@ function addItem(id, title) {
 }
 
 function readItems(filter) {
+  let query = "SELECT (id, title, done) FROM todos";
+  switch (filter) {
+    case "done":
+      query += " WHERE done = true";
+      break;
+    case "pending":
+      query += " WHERE done = false";
+      break;
+    default:
+      break;
+  }
   client
-    .query(`SELECT (id, title, done) FROM todos`)
+    .query(query)
     .then((res) => showItems(res.rows))
     .catch((err) => {
       console.error("Couldn't read the tasks", err);
@@ -141,10 +152,24 @@ function readItems(filter) {
 }
 
 function showItems(rows) {
+  const tasks = rows.map((item) => {
+    const arrItems = item.row.slice(1, -1).split(",");
+    const jsonItems = {
+      id: arrItems[0],
+      title: arrItems[1],
+      done: arrItems[2] === "t",
+    };
+    return jsonItems;
+  });
   console.log(`
     Found ${rows.length} items :
-    Id  |     Title     |   Status   |`);
-  rows.map((row) => console.log(row.row));
+    Id  |   Title   |   Status`);
+  tasks.forEach((task) => {
+    console.log(`
+    ${task.id}   | ${task.title} | ${task.status ? "Done" : "Pending"}
+    _______________________________________________
+    `);
+  });
 }
 
 async function main() {
