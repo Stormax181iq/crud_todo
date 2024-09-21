@@ -2,6 +2,7 @@ const { parseArgs } = require("node:util");
 const readline = require("node:readline/promises");
 const pg = require("pg");
 const dotenv = require("dotenv");
+const pjson = require("./package.json");
 
 dotenv.config();
 
@@ -204,6 +205,11 @@ function deleteItem(ids) {
       .catch((err) => console.error("Couldn't delete the task:", err));
   });
 }
+
+function printVersion() {
+  console.log(pjson.version);
+}
+
 async function main() {
   await client
     .connect()
@@ -239,6 +245,10 @@ async function main() {
 
     if (remove) {
       deleteItem(remove);
+    }
+
+    if (version) {
+      printVersion();
     }
 
     if (exit) {
