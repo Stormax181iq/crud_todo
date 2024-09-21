@@ -88,6 +88,8 @@ function printHelp(helpValue) {
       Toggles the state of the todo item with the corresponding id :
         A task marked as "done" will be undone.
         A task marked as "pending" will be done.
+      You can update several items at once with the following syntax :
+        "--done [id1],[id2],[idn]"
       `);
   }
 
@@ -95,6 +97,8 @@ function printHelp(helpValue) {
     console.log(`
       Delete an item : "--delete" or "-d [id]".
       Definitely deletes the corresponding item from the todo list.
+      You can delete several items at once with the following syntax :
+        "--delete [id1],[id2],[idn]"
       `);
   }
 
@@ -166,12 +170,40 @@ function showItems(rows) {
     Id  |   Title   |   Status`);
   tasks.forEach((task) => {
     console.log(`
-    ${task.id}   | ${task.title} | ${task.status ? "Done" : "Pending"}
-    _______________________________________________
-    `);
+    ${task.id}   | ${task.title} | ${task.done ? "Done" : "Pending"}
+    _______________________________________________`);
   });
 }
 
+function updateItem(ids) {
+  let query = `UPDATE todos SET done = NOT done WHERE id = `;
+
+  ids.split(",").forEach((id) => {
+    client
+      .query(query + id)
+      .then(
+        console.log(`
+        Task updated
+        `)
+      )
+      .catch((err) => console.error("Couldn't update the task:", err));
+  });
+}
+
+function deleteItem(ids) {
+  const query = `DELETE FROM todos WHERE id = `;
+
+  ids.split(",").forEach((id) => {
+    client
+      .query(query + id)
+      .then(
+        console.log(`
+        Task deleted
+        `)
+      )
+      .catch((err) => console.error("Couldn't delete the task:", err));
+  });
+}
 async function main() {
   await client
     .connect()
@@ -186,7 +218,7 @@ async function main() {
 
   rl.on("line", (input) => {
     const {
-      values: { help, add, list, done, version, exit },
+      values: { help, add, list, done, delete: remove, version, exit },
     } = parseArgs({ args: input.split(" "), options: options, strict: false });
 
     if (help) {
@@ -199,6 +231,14 @@ async function main() {
 
     if (list) {
       readItems(list);
+    }
+
+    if (done) {
+      updateItem(done);
+    }
+
+    if (remove) {
+      deleteItem(remove);
     }
 
     if (exit) {
